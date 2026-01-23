@@ -13,7 +13,6 @@ class LeMondeItem extends StatelessWidget {
       title: Text(item.title),
       subtitle: Text(item.description),
       onTap: () {
-        // You can add navigation to detail page here if needed
         _launchUrl(item.link);
       },
     );

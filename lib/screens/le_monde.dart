@@ -24,7 +24,7 @@ class _LeMondeScreenState extends State<LeMondeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Le Monde RSS'),
+        title: const Text('Le Monde - à la une'),
       ),
       body: Center(
         child: FutureBuilder<Rss<UneLeMonde>>(
