@@ -41,7 +41,7 @@ class MyHomePage extends StatelessWidget {
               ),
             );
           },
-          child: const Text('Voir Le Monde RSS'),
+          child: const Text('Voir Le Monde - à la une'),
         ),
       ),
     );

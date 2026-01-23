@@ -11,7 +11,21 @@ class LeMondeItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(item.title),
-      subtitle: Text(item.description),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            item.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            item.pubDate,
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+        ],
+      ),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       onTap: () {
         _launchUrl(item.link);
