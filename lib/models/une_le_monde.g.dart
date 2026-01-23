@@ -6,24 +6,7 @@ part of 'une_le_monde.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Rss _$RssFromJson(Map<String, dynamic> json, Object? Function(Object? json) fromJsonT) =>
-    Rss(channel: Channel.fromJson(json['channel'] as Map<String, dynamic>));
-
-Map<String, dynamic> _$RssToJson(Rss instance) => <String, dynamic>{
-  'channel': instance.channel,
-};
-
-Channel _$ChannelFromJson(Map<String, dynamic> json) => Channel(
-  item: (json['item'] as List<dynamic>)
-      .map((e) => Item.fromJson(e as Map<String, dynamic>))
-      .toList(),
-);
-
-Map<String, dynamic> _$ChannelToJson(Channel instance) => <String, dynamic>{
-  'item': instance.item,
-};
-
-Item _$ItemFromJson(Map<String, dynamic> json) => Item(
+UneLeMonde _$UneLeMondeFromJson(Map<String, dynamic> json) => UneLeMonde(
   title: json['title'] as String,
   link: json['link'] as String,
   description: json['description'] as String,
@@ -31,10 +14,11 @@ Item _$ItemFromJson(Map<String, dynamic> json) => Item(
   guid: json['guid'] as String,
 );
 
-Map<String, dynamic> _$ItemToJson(Item instance) => <String, dynamic>{
-  'title': instance.title,
-  'link': instance.link,
-  'description': instance.description,
-  'pubDate': instance.pubDate,
-  'guid': instance.guid,
-};
+Map<String, dynamic> _$UneLeMondeToJson(UneLeMonde instance) =>
+    <String, dynamic>{
+      'title': instance.title,
+      'link': instance.link,
+      'description': instance.description,
+      'pubDate': instance.pubDate,
+      'guid': instance.guid,
+    };

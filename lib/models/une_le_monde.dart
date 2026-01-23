@@ -12,7 +12,7 @@ part 'une_le_monde.g.dart';
 //   Map<String, dynamic> toJson() => _$RssToJson(this);
 // }
 
-@JsonSerializable()
+// @JsonSerializable()
 class Rss<T> {
   Channel<T> channel;
 
@@ -21,12 +21,19 @@ class Rss<T> {
   factory Rss.fromJson(
     Map<String, dynamic> json,
     T Function(Object? json) fromJsonT,
-  ) => _$RssFromJson(json, fromJsonT);
-  Map<String, dynamic> toJson(Object? Function(T value) toJsonT) =>
-      _$RssToJson(this, toJsonT);
+  ) {
+    return Rss<T>(
+      channel: Channel<T>.fromJson(
+        json['channel'] as Map<String, dynamic>,
+        fromJsonT,
+      ),
+    );
+  }
+
+  Map<String, dynamic> toJson(Object Function(T value) toJsonT) =>
+      <String, dynamic>{'channel': channel.toJson(toJsonT)};
 }
 
-@JsonSerializable(genericArgumentFactories: true)
 class Channel<T> {
   List<T> item;
 
@@ -35,31 +42,14 @@ class Channel<T> {
   factory Channel.fromJson(
     Map<String, dynamic> json,
     T Function(Object? json) fromJsonT,
-  ) => _$ChannelFromJson(json, fromJsonT);
-  Map<String, dynamic> toJson(Object? Function(T value) toJsonT) =>
-      _$ChannelToJson(this, toJsonT);
+  ) {
+    final itemsJson = json['item'] as List<dynamic>? ?? [];
+    return Channel<T>(item: itemsJson.map((e) => fromJsonT(e)).toList());
+  }
+
+  Map<String, dynamic> toJson(Object Function(T value) toJsonT) =>
+      <String, dynamic>{'item': item.map((e) => toJsonT(e)).toList()};
 }
-
-// abstract class Item {
-//   // Common properties or methods if any, otherwise just an empty abstract class
-// }
-
-// @JsonSerializable()
-// class UneLeMonde implements Item {
-//   String title;
-//   String link;
-//   String description;
-//   String pubDate;
-//   String guid;
-
-//   List<Item> item;
-
-//   Channel({required this.item});
-
-//   factory Channel.fromJson(Map<String, dynamic> json) =>
-//       _$ChannelFromJson(json);
-//   Map<String, dynamic> toJson() => _$ChannelToJson(this);
-// }
 
 @JsonSerializable()
 class UneLeMonde {
@@ -78,6 +68,25 @@ class UneLeMonde {
   });
 
   factory UneLeMonde.fromJson(Map<String, dynamic> json) =>
-      _$ItemFromJson(json);
-  Map<String, dynamic> toJson() => _$ItemToJson(this);
+      _$UneLeMondeFromJson(json);
+  Map<String, dynamic> toJson() => _$UneLeMondeToJson(this);
+
+  static UneLeMonde _$UneLeMondeFromJson(Map<String, dynamic> json) {
+    return UneLeMonde(
+      title: json['title'] as String? ?? '',
+      link: json['link'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      pubDate: json['pubDate'] as String? ?? '',
+      guid: json['guid'] as String? ?? '',
+    );
+  }
+
+  static Map<String, dynamic> _$UneLeMondeToJson(UneLeMonde instance) =>
+      <String, dynamic>{
+        'title': instance.title,
+        'link': instance.link,
+        'description': instance.description,
+        'pubDate': instance.pubDate,
+        'guid': instance.guid,
+      };
 }

@@ -12,7 +12,10 @@ class FetchLeMonde {
       final response = await _dio.get('https://www.lemonde.fr/rss/une.xml');
       xml2json.parse(response.data);
       final json = jsonDecode(xml2json.toParker());
-      return Rss<UneLeMonde>.fromJson(json['rss']);
+      return Rss<UneLeMonde>.fromJson(
+        json['rss'],
+        (e) => UneLeMonde.fromJson(e as Map<String, dynamic>),
+      );
     } catch (e) {
       throw Exception("Erreur chargement Une Le Monde");
     }
