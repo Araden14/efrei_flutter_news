@@ -11,7 +11,7 @@ class FetchLeMonde {
   Future<Rss<UneLeMonde>> getUne() async {
     try {
       final response = await _dio.get(
-        'https://api.allorigins.win/raw?url=${Uri.encodeComponent('https://www.lemonde.fr/rss/une.xml')}',
+        Uri.encodeComponent('https://www.lemonde.fr/rss/une.xml'),
       );
       xml2json.parse(response.data);
       final json = jsonDecode(xml2json.toParker());
