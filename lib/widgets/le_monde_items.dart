@@ -12,9 +12,16 @@ class LeMondeItem extends StatelessWidget {
     return ListTile(
       title: Text(item.title),
       subtitle: Text(item.description),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       onTap: () {
         _launchUrl(item.link);
       },
+      tileColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
   }
 
