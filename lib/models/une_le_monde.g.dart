@@ -6,7 +6,7 @@ part of 'une_le_monde.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Rss _$RssFromJson(Map<String, dynamic> json) =>
+Rss _$RssFromJson(Map<String, dynamic> json, Object? Function(Object? json) fromJsonT) =>
     Rss(channel: Channel.fromJson(json['channel'] as Map<String, dynamic>));
 
 Map<String, dynamic> _$RssToJson(Rss instance) => <String, dynamic>{
