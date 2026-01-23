@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Le Monde RSS'),
+      home: const MyHomePage(title: 'Client RSS'),
     );
   }
 }
