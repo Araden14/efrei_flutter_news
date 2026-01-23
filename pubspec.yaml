@@ -38,6 +38,7 @@ dependencies:
   dio: ^5.9.0
   xml2json: ^6.0.0
   json_annotation: ^4.9.0
+  url_launcher: ^6.3.2
 
 
 dev_dependencies:
