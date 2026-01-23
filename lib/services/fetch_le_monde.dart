@@ -10,9 +10,7 @@ class FetchLeMonde {
 
   Future<Rss<UneLeMonde>> getUne() async {
     try {
-      final response = await _dio.get(
-        Uri.encodeComponent('https://www.lemonde.fr/rss/une.xml'),
-      );
+      final response = await _dio.get('https://www.lemonde.fr/rss/une.xml');
       xml2json.parse(response.data);
       final json = jsonDecode(xml2json.toParker());
       return Rss<UneLeMonde>.fromJson(
