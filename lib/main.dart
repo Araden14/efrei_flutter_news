@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:xml/xml.dart' as xml;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('fr_FR', null);
-  runApp(const LeMondeApp());
+  runApp(const NewsApp());
 }
 
 // ========== MODÈLE DE DONNÉES ==========
@@ -17,134 +16,139 @@ class NewsArticle {
   final String title;
   final String description;
   final String link;
-  final DateTime? pubDate;
+  final DateTime? publishedAt;
   final String? imageUrl;
+  final String? source;
 
   NewsArticle({
     required this.title,
     required this.description,
     required this.link,
-    this.pubDate,
+    this.publishedAt,
     this.imageUrl,
+    this.source,
   });
 
-  // Parse depuis un élément XML <item>
-  factory NewsArticle.fromXml(xml.XmlElement item) {
-    String getTextOrEmpty(String tag) {
-      return item.findElements(tag).isNotEmpty
-          ? item.findElements(tag).first.innerText
-          : '';
-    }
-
-    // Récupération de l'image (media:content)
-    String? imageUrl;
-    final mediaContent = item.findElements('media:content');
-    if (mediaContent.isNotEmpty) {
-      imageUrl = mediaContent.first.getAttribute('url');
-    }
-
-    // Parse de la date
-    DateTime? pubDate;
-    final pubDateStr = getTextOrEmpty('pubDate');
-    if (pubDateStr.isNotEmpty) {
-      try {
-        pubDate = DateFormat('EEE, dd MMM yyyy HH:mm:ss Z', 'en_US')
-            .parse(pubDateStr);
-      } catch (_) {}
-    }
-
+  factory NewsArticle.fromJson(Map<String, dynamic> json) {
     return NewsArticle(
-      title: getTextOrEmpty('title').trim(),
-      description: getTextOrEmpty('description').trim(),
-      link: getTextOrEmpty('link').trim(),
-      pubDate: pubDate,
-      imageUrl: imageUrl,
+      title: (json['title'] ?? 'Sans titre').toString(),
+      description: (json['description'] ?? '').toString(),
+      link: (json['url'] ?? '').toString(),
+      imageUrl: json['image']?.toString(),
+      source: json['source']?.toString(),
+      publishedAt: json['published_at'] != null
+          ? DateTime.tryParse(json['published_at'].toString())
+          : null,
     );
   }
 }
 
-// ========== SERVICE RSS ==========
-class RssService {
-  static Future<List<NewsArticle>> fetchArticles(String rssUrl) async {
-    final response = await http.get(
-      Uri.parse(rssUrl),
-      headers: {
-        'User-Agent':
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      },
+// ========== SERVICE MEDIASTACK ==========
+class NewsService {
+  static const String _apiKey = '5e616923038bbf78cf4e150d9f8f1f7c';
+  static const String _baseUrl = 'http://api.mediastack.com/v1/news';
+
+  static Future<List<NewsArticle>> fetchArticles({
+    required String category,
+    String languages = 'fr',
+    int limit = 25,
+  }) async {
+    final uri = Uri.parse(
+      '$_baseUrl?access_key=$_apiKey&categories=$category&languages=$languages&limit=$limit',
     );
+
+    final response = await http.get(uri);
 
     if (response.statusCode != 200) {
       throw Exception('Erreur HTTP ${response.statusCode}');
     }
 
-    final body = utf8.decode(response.bodyBytes);
-    final document = xml.XmlDocument.parse(body);
-    final items = document.findAllElements('item');
+    final data = json.decode(response.body) as Map<String, dynamic>;
 
-    return items.map((item) => NewsArticle.fromXml(item)).toList();
+    // Mediastack renvoie "error" dans le body si pb de clé/plan/etc.
+    if (data['error'] != null) {
+      final err = data['error'];
+      throw Exception('Erreur API: ${err['message'] ?? err.toString()}');
+    }
+
+    final list = (data['data'] as List<dynamic>)
+        .cast<Map<String, dynamic>>()
+        .map(NewsArticle.fromJson)
+        .where((a) => a.link.isNotEmpty)
+        .toList();
+
+    return list;
   }
 }
 
 // ========== APP ==========
-class LeMondeApp extends StatelessWidget {
-  const LeMondeApp({super.key});
+class NewsApp extends StatelessWidget {
+  const NewsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.blueGrey,
-      ),
-      home: const RssHomePage(),
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blueGrey),
+      home: const NewsHomePage(),
     );
   }
 }
 
 // ========== PAGE PRINCIPALE ==========
-class RssHomePage extends StatefulWidget {
-  const RssHomePage({super.key});
+class NewsHomePage extends StatefulWidget {
+  const NewsHomePage({super.key});
 
   @override
-  State<RssHomePage> createState() => _RssHomePageState();
+  State<NewsHomePage> createState() => _NewsHomePageState();
 }
 
-class _RssHomePageState extends State<RssHomePage> {
+class _NewsHomePageState extends State<NewsHomePage> {
+  // Catégories Mediastack (quelques-unes)
   final Map<String, String> _categories = {
-    'À la une': 'https://www.lemonde.fr/rss/une.xml',
-    'International': 'https://www.lemonde.fr/international/rss_full.xml',
-    'Sport': 'https://www.lemonde.fr/sport/rss_full.xml',
-    'Économie': 'https://www.lemonde.fr/economie/rss_full.xml',
-    'Politique': 'https://www.lemonde.fr/politique/rss_full.xml',
-    'Brésil': 'https://www.lemonde.fr/bresil/rss_full.xml',
-    'Planète': 'https://www.lemonde.fr/planete/rss_full.xml',
-    'Culture': 'https://www.lemonde.fr/culture/rss_full.xml',
+    'Général': 'general',
+    'Business': 'business',
+    'Sport': 'sports',
+    'Tech': 'technology',
+    'Santé': 'health',
+    'Science': 'science',
+    'Divertissement': 'entertainment',
   };
 
-  late String _selectedCategory;
+  late String _selectedCategoryName;
   late Future<List<NewsArticle>> _articlesFuture;
 
   @override
   void initState() {
     super.initState();
-    _selectedCategory = _categories.keys.first;
-    _articlesFuture = RssService.fetchArticles(_categories[_selectedCategory]!);
+    _selectedCategoryName = _categories.keys.first;
+    _articlesFuture = _load();
   }
 
-  void _changeCategory(String category) {
+  Future<List<NewsArticle>> _load() {
+    final cat = _categories[_selectedCategoryName]!;
+    return NewsService.fetchArticles(category: cat, languages: 'fr', limit: 25);
+  }
+
+  void _changeCategory(String name) {
     setState(() {
-      _selectedCategory = category;
-      _articlesFuture = RssService.fetchArticles(_categories[category]!);
+      _selectedCategoryName = name;
+      _articlesFuture = _load();
     });
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _articlesFuture = _load();
+    });
+    await _articlesFuture;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Le Monde • $_selectedCategory'),
+        title: Text('Mediastack • $_selectedCategoryName'),
         actions: [
           PopupMenuButton<String>(
             onSelected: _changeCategory,
@@ -164,11 +168,11 @@ class _RssHomePageState extends State<RssHomePage> {
           if (snapshot.hasError) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(18),
                 child: Text(
                   'Erreur : ${snapshot.error}\n\n'
-                  'Sur Chrome/Web, CORS bloque les requêtes.\n'
-                  'Lance sur Android/iOS/macOS pour que ça fonctionne.',
+                  'Si tu es sur Web: Mediastack gratuit est souvent en HTTP => bloqué.\n'
+                  'Teste sur Android (émulateur) pour être tranquille.',
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -176,14 +180,19 @@ class _RssHomePageState extends State<RssHomePage> {
           }
 
           final articles = snapshot.data ?? [];
+          if (articles.isEmpty) {
+            return const Center(child: Text('Aucun article trouvé'));
+          }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: articles.length,
-            itemBuilder: (context, index) {
-              final article = articles[index];
-              return ArticleCard(article: article);
-            },
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: articles.length,
+              itemBuilder: (context, index) {
+                return ArticleCard(article: articles[index]);
+              },
+            ),
           );
         },
       ),
@@ -209,8 +218,7 @@ class ArticleCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image (si disponible)
-            if (article.imageUrl != null)
+            if (article.imageUrl != null && article.imageUrl!.isNotEmpty)
               ClipRRect(
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(12)),
@@ -222,13 +230,21 @@ class ArticleCard extends StatelessWidget {
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
-
-            // Contenu
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (article.source != null && article.source!.isNotEmpty)
+                    Text(
+                      article.source!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.blueGrey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  const SizedBox(height: 6),
                   Text(
                     article.title,
                     style: const TextStyle(
@@ -237,20 +253,21 @@ class ArticleCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    article.description,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.grey[700]),
-                  ),
+                  if (article.description.isNotEmpty)
+                    Text(
+                      article.description,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey[700]),
+                    ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        article.pubDate != null
+                        article.publishedAt != null
                             ? DateFormat('dd MMM yyyy • HH:mm', 'fr_FR')
-                                .format(article.pubDate!)
+                                .format(article.publishedAt!.toLocal())
                             : '',
                         style: const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
