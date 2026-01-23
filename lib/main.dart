@@ -1,6 +1,6 @@
+import 'package:efrei_flutter_2026/models/rss.dart';
 import 'package:efrei_flutter_2026/services/fetch_le_monde.dart';
 import 'package:flutter/material.dart';
-import 'package:efrei_flutter_2026/models/une_le_monde.dart';
 
 void main() {
   runApp(const MyApp());

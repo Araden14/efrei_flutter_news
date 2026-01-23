@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:efrei_flutter_2026/models/rss.dart';
 import 'package:efrei_flutter_2026/models/une_le_monde.dart';
 import 'package:xml2json/xml2json.dart';
 
