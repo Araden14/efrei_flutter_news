@@ -31,12 +31,15 @@ class _LeMondeScreenState extends State<LeMondeScreen> {
           future: futureRss,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              return ListView.builder(
-                itemCount: snapshot.data!.channel.item.length,
-                itemBuilder: (context, index) {
-                  final item = snapshot.data!.channel.item[index];
-                  return LeMondeItem(item: item);
-                },
+              return Scrollbar(
+                thumbVisibility: true,
+                child: ListView.builder(
+                  itemCount: snapshot.data!.channel.item.length,
+                  itemBuilder: (context, index) {
+                    final item = snapshot.data!.channel.item[index];
+                    return LeMondeItem(item: item);
+                  },
+                ),
               );
             } else if (snapshot.hasError) {
               return Text('${snapshot.error}');
