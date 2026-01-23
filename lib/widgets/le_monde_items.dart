@@ -36,6 +36,8 @@ class LeMondeItem extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade300),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      // Add margin between items
+      minVerticalPadding: 10, // To increase the space above and below, available in ListTile since Flutter 2.0
     );
   }
 
